@@ -1,0 +1,32 @@
+{
+  "name": "DockCraft",
+  "short_name": "DockCraft",
+  "description": "Self-hosted Minecraft Bedrock server manager.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0F172A",
+  "theme_color": "#3B82F6",
+  "categories": ["games", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/static/images/dockcraft.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/static/images/dockcraft.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/static/images/dockcraft.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

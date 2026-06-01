@@ -24,9 +24,10 @@
   background: var(--primary);
   border-radius: 8px;
   display: grid; place-items: center;
+  overflow: hidden;
   box-shadow: 0 4px 10px -2px color-mix(in oklab, var(--primary) 40%, transparent);
 }
-.brand-logo svg { width: 18px; height: 18px; }
+.brand-logo svg, .brand-logo img { width: 26px; height: 26px; object-fit: contain; }
 .brand-text { line-height: 1.1; }
 .brand-name {
   font-family: 'Inter Tight', 'Inter', sans-serif;

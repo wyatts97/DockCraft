@@ -115,23 +115,54 @@ app.use('/api/marketplace', requireAuth, marketplaceRoute);
 // 404 for unknown API routes.
 app.use('/api', (req, res) => fail(res, 'Not found.', 404));
 
-// Inline favicon — avoids a 404 + extra request on every page load. A 1x1
-// transparent PNG keeps the browser happy without adding a binary asset to
-// the repo. (A real branded favicon can replace this later — tracked.)
-app.get('/favicon.ico', (_req, res) => {
-  const png = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-    'base64',
-  );
-  res.set('Content-Type', 'image/png');
-  res.set('Cache-Control', 'public, max-age=86400');
-  res.send(png);
-});
+// Favicon — the real DockCraft .ico (multi-resolution: 16/24/32/48/64/96/128/256,
+// 32bpp). Browsers pick the size they need; we serve the same file at both
+// /favicon.ico (legacy convention) and /assets/static/images/dockcraft.ico
+// (the path linked from the HTML <head>).
+//
+// We look for the .ico in the dist bundle first; if the frontend hasn't been
+// built yet, fall back to a 1x1 transparent PNG so the page never 404s.
+const faviconCandidates = [
+  path.join(__dirname, '..', 'frontend', 'dist', 'assets', 'static', 'images', 'dockcraft.ico'),
+  path.join(__dirname, '..', 'frontend', 'src', 'assets', 'static', 'images', 'dockcraft.ico'),
+];
+const faviconPath = faviconCandidates.find((p) => fs.existsSync(p));
+if (faviconPath) {
+  app.get('/favicon.ico', (_req, res) => {
+    res.set('Content-Type', 'image/x-icon');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.sendFile(faviconPath);
+  });
+} else {
+  // Pre-build fallback — 1x1 transparent PNG.
+  app.get('/favicon.ico', (_req, res) => {
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+      'base64',
+    );
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(png);
+  });
+}
 
 // ---- Static frontend (built Adminator output) ----
 const FRONTEND_DIST = process.env.FRONTEND_DIST || path.join(__dirname, '..', 'frontend', 'dist');
 if (fs.existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST));
+  // The PWA web manifest is at /assets/static/site.webmanifest in the build
+  // output (CopyWebpackPlugin copies assets/static/ wholesale), but the
+  // canonical path expected by browsers is /site.webmanifest. Serve it at
+  // the root with the correct content type so the <link rel="manifest">
+  // in each page finds it.
+  const webmanifestPath = path.join(FRONTEND_DIST, 'assets', 'static', 'site.webmanifest');
+  if (fs.existsSync(webmanifestPath)) {
+    app.get('/site.webmanifest', (_req, res) => {
+      res.set('Content-Type', 'application/manifest+json');
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.sendFile(webmanifestPath);
+    });
+  }
   app.get('*', (req, res) => {
     res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
   });

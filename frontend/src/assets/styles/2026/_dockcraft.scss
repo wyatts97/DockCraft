@@ -398,7 +398,7 @@
 }
 .dc-login-brand-inner { position: relative; max-width: 520px; }
 .dc-login-logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; }
-.dc-login-logo svg { width: 36px; height: 36px; }
+.dc-login-logo svg, .dc-login-logo img { width: 40px; height: 40px; object-fit: contain; }
 .dc-login-headline {
   font-family: 'Inter Tight', sans-serif;
   font-size: clamp(28px, 3.6vw, 44px);
