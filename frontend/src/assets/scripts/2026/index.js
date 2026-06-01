@@ -14,12 +14,13 @@
 import '../../styles/2026/index.scss';
 import { mountShell } from './Shell.js';
 import { initShellBehaviors } from './init.js';
-import { initDockCraft } from '../dockcraft/index.js';
+import { initDockCraft, initRouter } from '../dockcraft/index.js';
 
 function start() {
   mountShell();
   initShellBehaviors();
   initDockCraft();
+  initRouter();
 }
 
 if (document.readyState === 'loading') {

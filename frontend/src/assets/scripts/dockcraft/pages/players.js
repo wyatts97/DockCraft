@@ -9,16 +9,31 @@ import { apiFetch, toast, escapeHtml, withButtonSpinner } from '../api';
 import { confirmModal } from '../modal';
 import { getSocket } from '../socket';
 
+let joinHandler = null;
+let leaveHandler = null;
+let snapshotHandler = null;
+
 export async function init() {
   await Promise.all([loadOnline(), loadAllowlist()]);
 
   const socket = getSocket();
-  socket.on('player:join', loadOnline);
-  socket.on('player:leave', loadOnline);
-  socket.on('players:snapshot', (d) => renderOnline(d.players));
+  joinHandler = loadOnline;
+  leaveHandler = loadOnline;
+  snapshotHandler = (d) => renderOnline(d.players);
+  socket.on('player:join', joinHandler);
+  socket.on('player:leave', leaveHandler);
+  socket.on('players:snapshot', snapshotHandler);
 
   const form = document.getElementById('addPlayerForm');
   form?.addEventListener('submit', onAddPlayer);
+}
+
+export function destroy() {
+  const socket = getSocket();
+  if (joinHandler) socket.off('player:join', joinHandler);
+  if (leaveHandler) socket.off('player:leave', leaveHandler);
+  if (snapshotHandler) socket.off('players:snapshot', snapshotHandler);
+  joinHandler = leaveHandler = snapshotHandler = null;
 }
 
 async function loadOnline() {

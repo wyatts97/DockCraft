@@ -11,17 +11,35 @@ import { apiFetch, toast, formatUptime, escapeHtml, withButtonSpinner } from '..
 import { confirmModal } from '../modal';
 import { getSocket } from '../socket';
 
+let statusInterval = null;
+
+function onServerStats(s) { applyStats(s); }
+function onConsoleLine(line) { maybePushEvent(line); }
+function onPlayerJoin(p) { pushEvent(`${p.name} joined the game`, 'join'); }
+function onPlayerLeave(p) { pushEvent(`${p.name} left the game`, 'leave'); }
+function onServerReady(p) { pushEvent(`Server ready${p.version ? ` (v${p.version})` : ''}`, 'info'); }
+
 export async function init() {
   bindActions();
   await refreshStatus();
-  setInterval(refreshStatus, 10000);
+  statusInterval = setInterval(refreshStatus, 10000);
 
   const socket = getSocket();
-  socket.on('server:stats', (s) => applyStats(s));
-  socket.on('console:line', (line) => maybePushEvent(line));
-  socket.on('player:join', (p) => pushEvent(`${p.name} joined the game`, 'join'));
-  socket.on('player:leave', (p) => pushEvent(`${p.name} left the game`, 'leave'));
-  socket.on('server:ready', (p) => pushEvent(`Server ready${p.version ? ` (v${p.version})` : ''}`, 'info'));
+  socket.on('server:stats', onServerStats);
+  socket.on('console:line', onConsoleLine);
+  socket.on('player:join', onPlayerJoin);
+  socket.on('player:leave', onPlayerLeave);
+  socket.on('server:ready', onServerReady);
+}
+
+export function destroy() {
+  if (statusInterval) { clearInterval(statusInterval); statusInterval = null; }
+  const socket = getSocket();
+  socket.off('server:stats', onServerStats);
+  socket.off('console:line', onConsoleLine);
+  socket.off('player:join', onPlayerJoin);
+  socket.off('player:leave', onPlayerLeave);
+  socket.off('server:ready', onServerReady);
 }
 
 function setText(id, text) {

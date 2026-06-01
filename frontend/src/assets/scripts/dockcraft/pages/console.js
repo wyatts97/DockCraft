@@ -10,6 +10,8 @@ import { getSocket } from '../socket';
 
 const MAX_LINES = 1000;
 
+let consoleHandler = null;
+
 export async function init() {
   const output = document.getElementById('consoleOutput');
   const form = document.getElementById('consoleForm');
@@ -42,7 +44,8 @@ export async function init() {
 
   // Live stream.
   const socket = getSocket();
-  socket.on('console:line', (line) => append(line.text, line.level || classify(line.text)));
+  consoleHandler = (line) => append(line.text, line.level || classify(line.text));
+  socket.on('console:line', consoleHandler);
 
   clearBtn?.addEventListener('click', () => { output.innerHTML = ''; });
 
@@ -59,6 +62,12 @@ export async function init() {
       toast(err.message, 'error');
     }
   });
+}
+
+export function destroy() {
+  const socket = getSocket();
+  if (consoleHandler) socket.off('console:line', consoleHandler);
+  consoleHandler = null;
 }
 
 function classify(text) {
