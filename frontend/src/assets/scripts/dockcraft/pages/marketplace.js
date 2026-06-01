@@ -110,13 +110,17 @@ function render() {
         </div>
         <div class="dc-mod-name">${escapeHtml(p.name)}</div>
         <div class="cell-date">by ${escapeHtml(p.author || 'Unknown')}${p.fileSize ? ` · ${formatSize(p.fileSize)}` : ''}</div>
-        <div class="dc-mod-desc">${escapeHtml(p.summary || '')}</div>
-        <button class="btn btn--primary dc-mkt-install" data-install="${escapeHtml(p.id)}">Install</button>
+        <div class="dc-mkt-actions">
+          <button class="btn btn--ghost btn--sm" data-detail="${escapeHtml(p.id)}">Read more</button>
+          <button class="btn btn--primary dc-mkt-install" data-install="${escapeHtml(p.id)}">Install</button>
+        </div>
       </div>
     </div>`).join('');
 
   grid.querySelectorAll('[data-install]').forEach((btn) =>
     btn.addEventListener('click', () => onInstall(btn.getAttribute('data-install'), btn)));
+  grid.querySelectorAll('[data-detail]').forEach((btn) =>
+    btn.addEventListener('click', () => showDetail(btn.getAttribute('data-detail'))));
 }
 
 function initials(name) {
@@ -127,6 +131,51 @@ function formatSize(bytes) {
   if (!bytes) return '';
   const mb = bytes / (1024 * 1024);
   return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
+}
+
+function showDetail(id) {
+  const p = allPacks.find((x) => x.id === id);
+  if (!p) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'dc-modal-overlay';
+  overlay.innerHTML = `
+    <div class="dc-modal dc-modal--wide" role="dialog" aria-modal="true">
+      <div class="dc-mkt-detail">
+        <div class="dc-mkt-detail-thumb">${p.thumbnail ? `<img src="${escapeHtml(p.thumbnail)}" alt="">` : initials(p.name)}</div>
+        <div class="dc-mkt-detail-body">
+          <h3 class="dc-modal-title">${escapeHtml(p.name)}</h3>
+          <div class="cell-date" style="margin-bottom:12px">by ${escapeHtml(p.author || 'Unknown')}${p.version ? ` · ${escapeHtml(p.version)}` : ''}${p.fileSize ? ` · ${formatSize(p.fileSize)}` : ''}</div>
+          <div class="dc-mkt-detail-tags">${packCategories(p).map((c) => `<span class="tag t-info">${escapeHtml(c)}</span>`).join('')}</div>
+          <div class="dc-mkt-detail-desc">${p.description || escapeHtml(p.summary || 'No description available.')}</div>
+          <div class="dc-modal-actions" style="margin-top:18px">
+            <button class="btn btn--ghost" data-close>Close</button>
+            <a class="btn btn--ghost" href="${escapeHtml(p.sourceUrl || '#')}" target="_blank" rel="noopener noreferrer">View on CurseForge</a>
+            <button class="btn btn--primary" data-install="${escapeHtml(p.id)}">Install</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('is-in'));
+
+  const close = () => {
+    overlay.classList.remove('is-in');
+    setTimeout(() => overlay.remove(), 180);
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  overlay.querySelector('[data-close]').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  const installBtn = overlay.querySelector('[data-install]');
+  if (installBtn) {
+    installBtn.addEventListener('click', () => {
+      onInstall(p.id, installBtn);
+      installBtn.disabled = true;
+      installBtn.textContent = 'Installing…';
+    });
+  }
+  document.addEventListener('keydown', onKey);
 }
 
 async function onInstall(id, btn) {
