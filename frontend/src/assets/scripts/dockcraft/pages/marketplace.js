@@ -7,13 +7,15 @@
  * `fallback` and we open the CurseForge page so the user can grab it manually.
  *
  * Card layout: thumbnail is a self-contained 16:9 block at the top of the
- * card, body is a separate card-styled block underneath (theme bg). All
- * detail info — full description, tags, install — lives inline on the card
- * so the user never has to open a modal to read about a pack.
+ * card. Clicking the thumbnail opens a detail modal with the full description
+ * (rendered as HTML since it comes from CurseForge — see detailModal in
+ * modal.js for the trust contract). Body of the card stays compact: title,
+ * meta, short summary, tag pills, and View / Install buttons.
  */
 
 import { apiFetch, toast } from '../api';
 import { escapeHtml, formatSize, emptyState } from '../utils';
+import { detailModal } from '../modal';
 
 let allPacks = [];
 let activeCategory = 'all';
@@ -130,6 +132,12 @@ function render() {
 
   grid.querySelectorAll('[data-install]').forEach((btn) =>
     btn.addEventListener('click', () => onInstall(btn.getAttribute('data-install'), btn)));
+  grid.querySelectorAll('[data-detail]').forEach((thumb) =>
+    thumb.addEventListener('click', (e) => {
+      // Don't open the modal if the user is actually clicking the badge or a child anchor.
+      if (e.target.closest('a, button')) return;
+      openDetail(thumb.getAttribute('data-detail'));
+    }));
 }
 
 function renderCard(p) {
@@ -139,27 +147,29 @@ function renderCard(p) {
   const sizeBit = p.fileSize ? ` · ${formatSize(p.fileSize)}` : '';
   const meta = `by ${escapeHtml(p.author || 'Unknown')}${versionBit}${sizeBit}`;
   const summary = p.summary || p.description || 'No description available.';
-  // Convert plain-text line breaks into <br>; third-party content, never HTML.
+  // Convert plain-text line breaks into <br>; summary is escaped, never HTML.
   const summaryHtml = escapeHtml(summary).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
-  const hasMore = (p.description || '').length > (p.summary || '').length + 8;
   const init = escapeHtml(initials(p.name));
   const fallbackImg = p.thumbnail
     ? `<img src="${escapeHtml(p.thumbnail)}" alt="" loading="lazy" data-initials="${init}" onerror="this.parentNode.classList.add('dc-mkt-thumb--fallback');this.replace(document.createTextNode(this.dataset.initials));">`
     : `<span class="dc-mkt-thumb-init">${init}</span>`;
+  const viewLabel = 'View on Curseforge';
+  const externalIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg>';
   return `
     <article class="dc-mkt-card">
-      <div class="dc-mkt-thumb" aria-hidden="true">
+      <button class="dc-mkt-thumb" type="button" data-detail="${escapeHtml(p.id)}" aria-label="View details for ${escapeHtml(p.name)}">
         ${fallbackImg}
         <span class="dc-mkt-badge">${escapeHtml(cat)}</span>
-      </div>
+      </button>
       <div class="dc-mkt-body">
         <h3 class="dc-mkt-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</h3>
         <div class="dc-mkt-meta">${meta}</div>
         <p class="dc-mkt-summary">${summaryHtml}</p>
-        ${hasMore ? `<details class="dc-mkt-more"><summary>Read more</summary><div class="dc-mkt-desc">${escapeHtml(p.description).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</div></details>` : ''}
         <div class="dc-mkt-tags">${tags.slice(0, 3).map((t) => `<span class="dc-pill">${escapeHtml(t)}</span>`).join('')}</div>
         <div class="dc-mkt-actions">
-          <a class="btn btn--ghost btn--sm" href="${escapeHtml(p.sourceUrl || '#')}" target="_blank" rel="noopener noreferrer">View</a>
+          <a class="btn btn--ghost btn--sm" href="${escapeHtml(p.sourceUrl || '#')}" target="_blank" rel="noopener noreferrer">
+            ${viewLabel}${externalIcon}
+          </a>
           <button class="btn btn--primary btn--sm dc-mkt-install" data-install="${escapeHtml(p.id)}">Install</button>
         </div>
       </div>
@@ -177,6 +187,22 @@ function clearMarketplaceFilters() {
   activeCategory = 'all';
   document.querySelectorAll('[data-cat]').forEach((c) => c.classList.toggle('is-active', c.getAttribute('data-cat') === 'all'));
   render();
+}
+
+async function openDetail(id) {
+  const p = allPacks.find((x) => x.id === id);
+  if (!p) return;
+  const versionBit = p.version ? ` · ${p.version}` : '';
+  const sizeBit = p.fileSize ? ` · ${formatSize(p.fileSize)}` : '';
+  const meta = `by ${p.author || 'Unknown'}${versionBit}${sizeBit}`;
+  const tags = packCategories(p);
+  await detailModal({
+    title: p.name,
+    meta,
+    summary: p.summary,
+    descriptionHtml: p.description || '<em>No description provided.</em>',
+    tags: tags.join(', '),
+  });
 }
 
 async function onInstall(id, btn) {

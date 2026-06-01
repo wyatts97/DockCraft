@@ -136,8 +136,9 @@
 }
 
 /* Thumbnail is its own block — separate from the title/body so the body
-   (and the "Read more" area) always has a solid theme background, never the
-   thumb bleeding through. */
+   always has a solid theme background, never the thumb bleeding through.
+   Rendered as a <button> so it can be clicked to open the detail modal —
+   keyboard-focusable by default, no extra a11y wiring required. */
 .dc-mkt-thumb {
   position: relative;
   width: 100%;
@@ -150,7 +151,14 @@
   font-size: 32px;
   font-weight: 800;
   color: var(--t-light);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease, transform 120ms ease;
 }
+.dc-mkt-thumb:hover { opacity: 0.92; }
+.dc-mkt-thumb:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .dc-mkt-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .dc-mkt-thumb-init { letter-spacing: 0.04em; }
 .dc-mkt-badge {
@@ -160,6 +168,7 @@
   font-size: 10.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  pointer-events: none; /* never intercept the click on the thumb */
 }
 
 /* Body — solid theme background, never inherits from the thumb. */
@@ -195,35 +204,6 @@
   overflow: hidden;
 }
 
-/* "Read more" expansion — solid theme background, never thumb bg. */
-.dc-mkt-more {
-  background: var(--bg-card);
-  border-top: 1px dashed var(--border-soft);
-  margin: 0 -16px -16px;
-  padding: 0 16px;
-}
-.dc-mkt-more summary {
-  cursor: pointer;
-  color: var(--primary);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 8px 0;
-  list-style: none;
-  user-select: none;
-}
-.dc-mkt-more summary::-webkit-details-marker { display: none; }
-.dc-mkt-more summary::after { content: ' +'; opacity: 0.6; }
-.dc-mkt-more[open] summary::after { content: ' –'; opacity: 0.6; }
-.dc-mkt-more[open] { padding: 10px 16px 16px; }
-.dc-mkt-desc {
-  font-size: 13px;
-  color: var(--t-muted);
-  line-height: 1.6;
-  white-space: pre-wrap;
-}
-.dc-mkt-desc p { margin: 0 0 8px; }
-.dc-mkt-desc p:last-child { margin-bottom: 0; }
-
 .dc-mkt-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
 .dc-pill {
   display: inline-block;
@@ -237,11 +217,65 @@
   letter-spacing: 0.4px;
 }
 .dc-mkt-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 8px; }
-.dc-mkt-actions .btn { flex: 1; justify-content: center; }
+.dc-mkt-actions .btn { flex: 1; justify-content: center; gap: 6px; }
+.dc-mkt-actions .btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 .dc-mkt-install { justify-content: center; }
 .dc-banner { background: var(--info-soft); color: var(--info); border-radius: 10px; padding: 12px 16px; font-size: 13px; margin-bottom: 18px; }
 
-/* ---- Marketplace detail modal (legacy — kept for back-compat, not used) ---- */
+/* ---- Marketplace detail modal ---- */
+.dc-modal-overlay--wide { align-items: flex-start; padding: 40px 16px; overflow-y: auto; }
+.dc-modal--wide {
+  width: min(720px, 96vw);
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+.dc-modal--wide .dc-modal-title { padding-right: 32px; }
+.dc-modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 28px; height: 28px;
+  background: transparent;
+  border: 0;
+  color: var(--t-muted);
+  font-size: 22px; line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+  display: grid; place-items: center;
+  padding: 0;
+}
+.dc-modal-close:hover { background: var(--bg-hover); color: var(--t-base); }
+.dc-modal-close:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.dc-modal-meta { font-size: 12px; color: var(--t-muted); margin-top: -4px; }
+.dc-modal-summary { font-size: 14px; color: var(--t-base); line-height: 1.5; margin: 0; }
+.dc-mkt-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.dc-mkt-detail-body {
+  font-size: 13.5px;
+  color: var(--t-muted);
+  line-height: 1.6;
+  overflow-y: auto;
+  max-height: 50vh;
+  padding: 4px 2px;
+
+  /* give nested <h2>/<strong>/<a>/etc. from third-party descriptions
+     readable styling that adapts to the theme */
+}
+.dc-mkt-detail-body h1, .dc-mkt-detail-body h2, .dc-mkt-detail-body h3 {
+  color: var(--t-strong);
+  font-size: 14.5px;
+  margin: 14px 0 6px;
+}
+.dc-mkt-detail-body h1:first-child, .dc-mkt-detail-body h2:first-child, .dc-mkt-detail-body h3:first-child { margin-top: 0; }
+.dc-mkt-detail-body p { margin: 0 0 10px; }
+.dc-mkt-detail-body p:last-child { margin-bottom: 0; }
+.dc-mkt-detail-body ul, .dc-mkt-detail-body ol { margin: 0 0 10px; padding-left: 22px; }
+.dc-mkt-detail-body li { margin: 0 0 4px; }
+.dc-mkt-detail-body a { color: var(--primary); }
+.dc-mkt-detail-body strong { color: var(--t-strong); font-weight: 600; }
+.dc-mkt-detail-body code { background: var(--bg-muted); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+.dc-mkt-detail-body img { max-width: 100%; height: auto; border-radius: 6px; }
+.dc-mkt-detail-body hr { border: 0; border-top: 1px solid var(--border-soft); margin: 12px 0; }
 .dc-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
 .dc-chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--t-muted); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
 .dc-chip:hover { border-color: var(--t-light); }

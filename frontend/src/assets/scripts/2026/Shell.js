@@ -110,18 +110,6 @@ function renderSidebar(activeKey) {
         </div>
       </div>
       ${sections}
-      <div class="sidebar-footer">
-        <div class="workspace">
-          <div class="workspace-avatar" data-user-initials>DC</div>
-          <div class="workspace-text">
-            <div class="workspace-name" data-user-name>Admin</div>
-            <div class="workspace-role">administrator</div>
-          </div>
-          <svg class="workspace-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="m7 9 5-5 5 5"/><path d="m7 15 5 5 5-5"/>
-          </svg>
-        </div>
-      </div>
     </aside>`;
 }
 
@@ -187,9 +175,14 @@ export function mountShell() {
   const activeKey = body.getAttribute('data-active') || '';
   const crumbs = body.getAttribute('data-crumbs') || '';
 
-  const sidebarHost = document.querySelector('[data-shell-sidebar]');
-  const topbarHost  = document.querySelector('[data-shell-topbar]');
-  const footerHost  = document.querySelector('[data-shell-footer]');
+  // The shell hosts are placeholder divs on first render and become the
+  // real elements (aside/header/footer) after the initial mount. On SPA
+  // navigations the placeholders are already gone, so we fall back to the
+  // existing element selectors — otherwise the sidebar/topbar would stay
+  // frozen on the first page's state for the rest of the session.
+  const sidebarHost = document.querySelector('[data-shell-sidebar]') || document.querySelector('.d-sidebar');
+  const topbarHost  = document.querySelector('[data-shell-topbar]')  || document.querySelector('.d-topbar');
+  const footerHost  = document.querySelector('[data-shell-footer]')  || document.querySelector('.d-footer');
 
   if (sidebarHost) sidebarHost.outerHTML = renderSidebar(activeKey);
   if (topbarHost)  topbarHost.outerHTML  = renderTopbar(crumbs);
