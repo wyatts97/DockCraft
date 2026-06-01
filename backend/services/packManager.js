@@ -27,7 +27,11 @@ const os = require('os');
 const AdmZip = require('adm-zip');
 const config = require('../config');
 
-const MAX_ARCHIVE_ENTRIES = 5000;
+// Cap per archive (outer or inner). Real Bedrock packs — especially resource
+// packs with thousands of textures, sounds, and models — can legitimately
+// exceed 5–10k files. 50k is still well below "zip bomb" territory (those
+// are 100k+ tiny files) and keeps the worst-case extraction bounded.
+const MAX_ARCHIVE_ENTRIES = 50000;
 const MAX_FILE_BYTES = 512 * 1024 * 1024;       // 512 MB per file
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const INNER_ARCHIVE_EXTS = new Set(['.zip', '.mcpack', '.mcbehavior', '.mcaddon']);
@@ -451,6 +455,7 @@ module.exports = {
   // Exported for unit testing.
   isUnsafePath,
   safeExtract,
+  MAX_ARCHIVE_ENTRIES,
   ManifestMissingError,
   unwrapInnerArchives,
   peelSinglePackWrapper,
