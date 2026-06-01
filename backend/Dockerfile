@@ -16,6 +16,8 @@ WORKDIR /app
 COPY backend/package*.json ./
 RUN npm install --omit=dev
 COPY backend/ ./
+# Seed marketplace registry so the UI has packs on first boot.
+COPY marketplace/ /marketplace/
 # Bring in the compiled frontend so Express can serve it.
 COPY --from=frontend /frontend/dist ./frontend/dist
 ENV FRONTEND_DIST=/app/frontend/dist
