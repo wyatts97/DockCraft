@@ -1,0 +1,49 @@
+# DockCraft — launches the dashboard/controller and the Minecraft Bedrock
+# server together on the same Docker network.
+#
+# The dockcraft service mounts the Docker socket so it can control the
+# minecraft container via Dockerode, and shares the ./data bind mount so it can
+# read/write world files, packs, and the allowlist directly.
+
+services:
+  dockcraft:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: dockcraft
+    ports:
+      - "3000:3000"            # DockCraft dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock   # required for Dockerode
+      - ./data:/data                                 # shared with minecraft
+    environment:
+      - MINECRAFT_CONTAINER_NAME=dockcraft-mc
+      - DATA_PATH=/data
+      # Persist DockCraft's config inside the shared data volume so it survives
+      # restarts without a fragile single-file bind mount.
+      - CONFIG_PATH=/data/dockcraft.config.json
+      # Absolute HOST path of ./data — used when DockCraft recreates the
+      # minecraft container (settings change) so the bind mount stays valid.
+      - HOST_DATA_PATH=${HOST_DATA_PATH:-./data}
+      - JWT_SECRET=${JWT_SECRET:-}
+    depends_on:
+      - minecraft
+    restart: unless-stopped
+
+  minecraft:
+    image: itzg/minecraft-bedrock-server
+    container_name: dockcraft-mc
+    ports:
+      - "19132:19132/udp"
+    volumes:
+      - ./data:/data
+    environment:
+      EULA: "TRUE"
+      VERSION: "LATEST"
+      SERVER_NAME: "DockCraft Server"
+      GAMEMODE: "survival"
+      DIFFICULTY: "normal"
+      MAX_PLAYERS: "10"
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

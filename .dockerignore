@@ -1,0 +1,7 @@
+**/node_modules
+frontend/dist
+backend/dockcraft.config.json
+data
+.git
+.env
+*.log

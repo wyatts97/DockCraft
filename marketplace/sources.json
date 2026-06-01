@@ -1,0 +1,12 @@
+{
+  "comment": "CurseForge project paths shown in the DockCraft marketplace. Each entry is the path after the cfwidget/CurseForge host: 'minecraft-bedrock/addons/<slug>'. Add or remove entries here, then hit Refresh in the UI (or run `npm run refresh:marketplace`).",
+  "sources": [
+    "minecraft-bedrock/addons/core-craft",
+    "minecraft-bedrock/addons/better-on-bedrock",
+    "minecraft-bedrock/addons/serp-pokemon-addon",
+    "minecraft-bedrock/addons/bedrock-reimagined",
+    "minecraft-bedrock/addons/effortless-building",
+    "minecraft-bedrock/addons/bedrock-essentials",
+    "minecraft-bedrock/addons/raiyons-java-combat-addon"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "_comment": "Curated subset of itzg/minecraft-bedrock-server env vars, mapped to plain-English labels and grouped for the settings UI. Refresh from https://github.com/itzg/docker-minecraft-bedrock-server (property-definitions.json) when new options are needed.",
+  "groups": [
+    {
+      "id": "general",
+      "label": "General",
+      "fields": [
+        { "key": "SERVER_NAME", "label": "Server Name", "description": "The name players see in their server list.", "type": "string", "default": "DockCraft Server" },
+        { "key": "LEVEL_NAME", "label": "World Name", "description": "The name of the world folder the server loads.", "type": "string", "default": "Bedrock level" },
+        { "key": "VERSION", "label": "Server Version", "description": "Which Bedrock version to run. LATEST auto-updates on restart.", "type": "string", "default": "LATEST" }
+      ]
+    },
+    {
+      "id": "gameplay",
+      "label": "Gameplay",
+      "fields": [
+        { "key": "GAMEMODE", "label": "Game Mode", "description": "Default mode for new players.", "type": "enum", "default": "survival", "options": ["survival", "creative", "adventure"] },
+        { "key": "DIFFICULTY", "label": "Difficulty", "description": "How dangerous the world is.", "type": "enum", "default": "normal", "options": ["peaceful", "easy", "normal", "hard"] },
+        { "key": "LEVEL_TYPE", "label": "World Type", "description": "Terrain generation style.", "type": "enum", "default": "DEFAULT", "options": ["DEFAULT", "FLAT", "LEGACY"] },
+        { "key": "LEVEL_SEED", "label": "World Seed", "description": "Seed for terrain generation. Leave blank for random.", "type": "string", "default": "" }
+      ]
+    },
+    {
+      "id": "players",
+      "label": "Players",
+      "fields": [
+        { "key": "MAX_PLAYERS", "label": "Max Players", "description": "Maximum number of players allowed online at once.", "type": "number", "default": "10" },
+        { "key": "ONLINE_MODE", "label": "Require Xbox Login", "description": "Require players to be authenticated with Xbox Live.", "type": "boolean", "default": "true" },
+        { "key": "ALLOW_LIST", "label": "Use Allowlist", "description": "Only players on the allowlist can join.", "type": "boolean", "default": "false" },
+        { "key": "PLAYER_IDLE_TIMEOUT", "label": "Idle Kick (minutes)", "description": "Kick players after this many idle minutes. 0 disables.", "type": "number", "default": "30" }
+      ]
+    },
+    {
+      "id": "network",
+      "label": "Network",
+      "fields": [
+        { "key": "SERVER_PORT", "label": "Server Port", "description": "UDP port the server listens on.", "type": "number", "default": "19132" },
+        { "key": "VIEW_DISTANCE", "label": "View Distance", "description": "Max render chunks sent to clients. Higher uses more bandwidth.", "type": "number", "default": "32" },
+        { "key": "TICK_DISTANCE", "label": "Tick Distance", "description": "Chunks around players that are actively simulated (4-12).", "type": "number", "default": "4" }
+      ]
+    },
+    {
+      "id": "advanced",
+      "label": "Advanced",
+      "advanced": true,
+      "fields": [
+        { "key": "TEXTUREPACK_REQUIRED", "label": "Force Resource Packs", "description": "Require all clients to download the server resource packs.", "type": "boolean", "default": "false" },
+        { "key": "ALLOW_CHEATS", "label": "Allow Cheats", "description": "Enable commands like /gamemode for operators.", "type": "boolean", "default": "false" },
+        { "key": "DEFAULT_PLAYER_PERMISSION_LEVEL", "label": "Default Permission", "description": "Permission level granted to new players.", "type": "enum", "default": "member", "options": ["visitor", "member", "operator"] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+frontend/dist/
+
+# Runtime config (created on first run; contains the admin hash + secrets)
+backend/dockcraft.config.json
+
+# Minecraft server data (worlds, packs, server binary, backups)
+data/
+
+# Environment
+.env
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DockCraft · Sign In</title>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('dash26-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body data-page="login">
+    <div style="min-height:100vh; display:grid; place-items:center; padding:24px; background:var(--bg-body)">
+      <div class="auth-card" style="width:min(420px,94vw)">
+        <h2>Welcome to DockCraft</h2>
+        <p class="sub">Sign in to manage your Minecraft server.</p>
+        <form id="loginForm" class="auth-form">
+          <div class="field">
+            <label class="field-label" for="username">Username</label>
+            <input id="username" name="username" class="input" type="text" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label class="field-label" for="password">Password</label>
+            <input id="password" name="password" class="input" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="btn btn--primary auth-submit" type="submit">
+            Sign in
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
