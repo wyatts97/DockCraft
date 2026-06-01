@@ -16,7 +16,6 @@
 const
   manifest          = require('../manifest'),
   path              = require('path'),
-  cssNext           = require('postcss-preset-env'),
   ExtractTextPlugin = require('mini-css-extract-plugin');
 
 // ---------------
@@ -36,9 +35,7 @@ const loaders = [
       sourceMap: manifest.IS_DEVELOPMENT,
       postcssOptions: {
         plugins: [
-          [
-            cssNext(),
-          ],
+          'postcss-preset-env',
         ],
       },
     },
