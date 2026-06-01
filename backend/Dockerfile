@@ -3,7 +3,7 @@
 # frontend/ and backend/ directories are available here.
 
 # ---- Stage 1: build the Adminator-based frontend ----
-FROM node:18-alpine AS frontend
+FROM node:20-alpine AS frontend
 WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm install
@@ -11,7 +11,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # ---- Stage 2: backend runtime ----
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 COPY backend/package*.json ./
 RUN npm install --omit=dev
