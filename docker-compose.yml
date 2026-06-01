@@ -33,6 +33,7 @@ services:
   minecraft:
     image: itzg/minecraft-bedrock-server
     container_name: dockcraft-mc
+    network_mode: bridge
     ports:
       - "19132:19132/udp"
     volumes:
