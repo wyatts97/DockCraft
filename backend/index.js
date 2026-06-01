@@ -46,6 +46,14 @@ const httpServer = http.createServer(app);
 // files — tracked as a follow-up.
 app.use(
   helmet({
+    // HSTS is OFF by default. Helmet v7 enables it with a 180-day maxAge, and
+    // modern browsers honor HSTS even when received over HTTP (to prevent
+    // downgrade attacks). That means a single hit to an HTTP-only deployment
+    // (no TLS in front of the backend) caches a rule that upgrades every
+    // future request to HTTPS — the assets then fail with ERR_SSL_PROTOCOL_ERROR
+    // and the page renders unstyled. Opt back in with HELMET_HSTS=1 when the
+    // backend is behind a terminating TLS proxy.
+    hsts: process.env.HELMET_HSTS === '1',
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
@@ -63,6 +71,11 @@ app.use(
         'frame-src': ["'self'", 'https://www.curseforge.com', 'https://*.curseforge.com'],
         'object-src': ["'none'"],
         'base-uri': ["'self'"],
+        // The `upgrade-insecure-requests` directive (added by helmet's
+        // useDefaults) would tell the browser to silently rewrite every
+        // http:// subresource to https:// — which fails (ERR_SSL_PROTOCOL_ERROR)
+        // on an HTTP-only deployment and leaves the page unstyled. Drop it.
+        'upgrade-insecure-requests': null,
       },
     },
     crossOriginEmbedderPolicy: false, // CurseForge thumbnails need to load
@@ -101,6 +114,19 @@ app.use('/api/marketplace', requireAuth, marketplaceRoute);
 
 // 404 for unknown API routes.
 app.use('/api', (req, res) => fail(res, 'Not found.', 404));
+
+// Inline favicon — avoids a 404 + extra request on every page load. A 1x1
+// transparent PNG keeps the browser happy without adding a binary asset to
+// the repo. (A real branded favicon can replace this later — tracked.)
+app.get('/favicon.ico', (_req, res) => {
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+    'base64',
+  );
+  res.set('Content-Type', 'image/png');
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.send(png);
+});
 
 // ---- Static frontend (built Adminator output) ----
 const FRONTEND_DIST = process.env.FRONTEND_DIST || path.join(__dirname, '..', 'frontend', 'dist');
