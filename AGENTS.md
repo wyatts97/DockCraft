@@ -152,7 +152,9 @@ dockcraft/
 │   │   ├── packManager.js     ← Handles pack extraction, manifest reading, JSON updates
 │   │   ├── backupManager.js   ← Zip/unzip world directories
 │   │   └── xuIdLookup.js      ← Proxies mcprofile.io API
-│   ├── dockcraft.config.json  ← Runtime config (gitignored, created on first run)
+│   ├── dockcraft.config.json      ← Runtime config (gitignored, created on first run)
+│   ├── dockcraft.config.example.json ← Sanitized template — safe to commit
+│   ├── security.js             ← SSRF guard, Socket.io auth, rate limiters, error sanitizer
 │   └── package.json
 │
 ├── marketplace/               ← Curated pack registry (can be hosted separately)
@@ -454,6 +456,22 @@ These are non-negotiable design constraints, not suggestions:
 
 ---
 
+## 12.5 Security Conventions
+
+- **`backend/security.js`** is the single home for security helpers — use them; don't reimplement:
+  - `safeFetch(url, opts, { allowHttp })` for every user-supplied or third-party URL the server fetches. It re-validates the host on every redirect hop and blocks any IP in a private/loopback/link-local range.
+  - `socketAuth` is the Socket.io handshake middleware — mounted in `index.js`. Don't bypass it; every realtime event assumes an authenticated client.
+  - `sanitizeError(err)` is the only function that should produce a `fail()` error string from a raw `Error`. The central error handler calls it; don't echo `err.message` to the client directly.
+  - `authRateLimiter()` / `apiRateLimiter()` for `express-rate-limit`. New routes that accept user input should mount one.
+- **Helmet is enabled** in `index.js` with a CSP that locks `default-src` to `'self'`. New `<script src>` / `<img src>` / `fetch()` / WebSocket endpoints must update the CSP allow-list — don't add new external origins without amending the directive.
+- **JWT verification** uses the helper in `middleware/auth.js`. Add a new auth requirement to a route by mounting `requireAuth`; don't write a new `jwt.verify(...)` call.
+- **Settings PUT** rejects unknown keys (see `routes/settings.js`). If you add a new env var, also add it to `schema/property-definitions.json` — otherwise the frontend will silently drop it.
+- **Pack archives** go through `services/packManager.installFromFile` / `safeExtract`, which enforces a zip-slip guard, a per-file size cap, and a total-entry cap. Don't call `AdmZip.extractAllTo` directly.
+- **Backup filenames** go through `services/backupManager.backupPath`, which defends against path traversal AND checks the resolved path stays inside `backupsDir`. Don't construct backup paths ad-hoc.
+- **CORS** is locked down on Socket.io to `false` in production (`NODE_ENV=production`). HTTP routes have no CORS — assume same-origin only.
+
+---
+
 ## 13. Error Handling Conventions
 
 - All API routes return `{ success: true, data: ... }` or `{ success: false, error: "Human-readable message" }`.
@@ -477,7 +495,53 @@ These are non-negotiable design constraints, not suggestions:
 
 ---
 
-## 15. Key External References
+## 15. Test Suite Conventions
+
+The repo has two test suites that run from a single root command:
+
+```
+npm test              # runs both backend + frontend sequentially
+npm run test:backend  # vitest, node environment
+npm run test:frontend # vitest, jsdom environment
+```
+
+**Backend (`backend/tests/`)** — vitest 4.x with `globals: true` and `node`
+environment. The module is CJS (`"type": "commonjs"`) so tests must not
+`require('vitest')`; use the globals `describe/it/expect/beforeEach` instead.
+
+- **Sandbox**: every test gets a per-process sandbox at
+  `backend/tmp/<random-hex>/` with a unique `CONFIG_PATH` and `DATA_PATH`
+  set in `tests/setup.js`. Tests can mutate state freely without touching
+  the real `dockcraft.config.json` or the host's data dir.
+- **Docker is mocked**. Use `mockDocker({ containerState: 'running' })` from
+  `tests/helpers.js` to stub `backend/docker.js` so route tests don't
+  need a daemon.
+- **Module-cache hygiene**: `config.js` and the route file under test both
+  cache their state on first require. Between tests, clear the relevant
+  `require.cache` keys (use `key.replace(/\\/g, '/').match(...)` —
+  Windows paths use backslashes) and re-write the sandbox config.
+- **Pattern**: mount a router on a fresh `express()` app, listen on `:0`,
+  fire `http.request()` calls, then `server.close()` in a `finally`. See
+  `tests/auth-routes.test.js` for the canonical pattern.
+- **The hardcoded bcrypt hash for "hunter2"** in `tests/helpers.js` is
+  $2a$10$KfFPlmg8XuqN3jJd6yRL1.FZAy6n.1ClWGNHM5lK7uIXXIhVOsBqu — do not
+  regenerate unless the test password changes.
+
+**Frontend (`frontend/tests/`)** — vitest 4.x with jsdom. Tests live in
+`frontend/tests/*.test.js`; source under test is in
+`src/assets/scripts/dockcraft/`. Use `import { ... }` from source paths
+relative to the test file. Setup runs in `tests/setup.js` (clears
+`localStorage` and `document.body` between tests, stubs `matchMedia`).
+
+**Naming**: `*.test.js`. Always co-located under `tests/`, never next to
+source.
+
+**No coverage threshold** for now — coverage config is wired (v8 provider)
+but not enforced.
+
+---
+
+## 16. Key External References
 
 | Resource | URL |
 |---|---|

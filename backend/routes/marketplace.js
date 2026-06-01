@@ -16,6 +16,7 @@ const packManager = require('../services/packManager');
 const cache = require('../services/marketplaceCache');
 const curseforge = require('../services/curseforgeClient');
 const { ok, fail } = require('../middleware/auth');
+const { safeFetch } = require('../security');
 
 const router = express.Router();
 
@@ -47,13 +48,16 @@ router.post('/refresh', async (req, res) => {
 
 /** Fetch a URL into a Buffer, returning null on a non-OK response. */
 async function download(url) {
-  const response = await fetch(url, {
+  // All marketplace download URLs are constructed from the curseforgeClient
+  // builder and resolve to known CDN hosts. safeFetch still re-validates
+  // each redirect to block SSRF via a malicious cfwidget response.
+  const response = await safeFetch(url, {
     headers: { 'User-Agent': curseforge.USER_AGENT },
-    redirect: 'follow',
     signal: AbortSignal.timeout(120000),
   });
   if (!response.ok) return null;
-  return Buffer.from(await response.arrayBuffer());
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }
 
 /** A valid pack archive is a ZIP — it starts with the "PK" magic bytes. */
@@ -106,7 +110,12 @@ router.post('/install/:id', async (req, res) => {
     return ok(res, { id: pack.id, installed }, 201);
   } catch (err) {
     const code = err.name === 'TimeoutError' ? 504 : 502;
-    return fail(res, `Could not install "${pack.name}": ${err.message}`, code);
+    // ManifestMissingError carries a structured `kind` so the frontend can
+    // show a friendlier hint than the generic install-failed toast.
+    const data = err.kind === 'manifest_missing'
+      ? { kind: 'manifest_missing' }
+      : undefined;
+    return fail(res, `Could not install "${pack.name}": ${err.message}`, code, data);
   } finally {
     if (tmpFile) fs.rmSync(tmpFile, { force: true });
   }

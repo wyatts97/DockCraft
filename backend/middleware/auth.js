@@ -15,8 +15,10 @@ function ok(res, data, status = 200) {
   return res.status(status).json({ success: true, data });
 }
 
-function fail(res, message, status = 400) {
-  return res.status(status).json({ success: false, error: message });
+function fail(res, message, status = 400, data) {
+  const body = { success: false, error: message };
+  if (data !== undefined) body.data = data;
+  return res.status(status).json(body);
 }
 
 function signToken(payload) {

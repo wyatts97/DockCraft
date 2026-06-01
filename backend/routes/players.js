@@ -29,6 +29,9 @@ function allowlistPath() {
 function permissionsPath() {
   return path.join(dataPath(), 'permissions.json');
 }
+function bansPath() {
+  return path.join(dataPath(), 'banned-players.json');
+}
 
 function readJsonArray(p) {
   try {
@@ -107,6 +110,59 @@ router.put('/permissions', (req, res) => {
   else list.push({ permission, xuid: String(xuid) });
   writeJsonArray(permissionsPath(), list);
   return ok(res, { permissions: list });
+});
+
+/**
+ * DELETE /api/players/permissions/:xuid
+ * Removes a player's permission override (they fall back to the default).
+ */
+router.delete('/permissions/:xuid', (req, res) => {
+  const xuid = String(req.params.xuid);
+  if (!/^\d{1,20}$/.test(xuid)) return fail(res, 'Invalid xuid.', 400);
+  const list = readJsonArray(permissionsPath());
+  const next = list.filter((p) => p.xuid !== xuid);
+  if (next.length === list.length) return fail(res, 'No permission override for that player.', 404);
+  writeJsonArray(permissionsPath(), next);
+  return ok(res, { permissions: next });
+});
+
+/* ---------------- Ban list ----------------
+ * Bedrock stores bans as an array of { name, xuid, reason? } in
+ * banned-players.json (sibling of allowlist.json). We keep the shape minimal
+ * — Bedrock itself only uses name + xuid; reason is for the admin's own
+ * records.
+ */
+
+/** GET /api/players/bans */
+router.get('/bans', (req, res) => {
+  return ok(res, { bans: readJsonArray(bansPath()) });
+});
+
+/** POST /api/players/bans — { name, xuid, reason? } */
+router.post('/bans', (req, res) => {
+  const { name, xuid, reason } = req.body || {};
+  if (!name || !xuid) return fail(res, 'Both name and xuid are required.', 400);
+  if (!/^\d{1,20}$/.test(String(xuid))) return fail(res, 'Invalid xuid.', 400);
+  const list = readJsonArray(bansPath());
+  if (list.some((p) => p.xuid === String(xuid))) {
+    return fail(res, `${name} is already banned.`, 409);
+  }
+  const entry = { name, xuid: String(xuid) };
+  if (reason) entry.reason = String(reason).slice(0, 200);
+  list.push(entry);
+  writeJsonArray(bansPath(), list);
+  return ok(res, { bans: list }, 201);
+});
+
+/** DELETE /api/players/bans/:xuid */
+router.delete('/bans/:xuid', (req, res) => {
+  const xuid = String(req.params.xuid);
+  if (!/^\d{1,20}$/.test(xuid)) return fail(res, 'Invalid xuid.', 400);
+  const list = readJsonArray(bansPath());
+  const next = list.filter((p) => p.xuid !== xuid);
+  if (next.length === list.length) return fail(res, 'Player not in ban list.', 404);
+  writeJsonArray(bansPath(), next);
+  return ok(res, { bans: next });
 });
 
 module.exports = router;

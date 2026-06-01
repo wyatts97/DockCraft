@@ -1,0 +1,28 @@
+{
+  "setupComplete": false,
+  "containerName": "dockcraft-mc",
+  "image": "itzg/minecraft-bedrock-server",
+  "dataPath": "/data",
+  "jwtSecret": "",
+  "admin": {
+    "username": "",
+    "passwordHash": ""
+  },
+  "env": {
+    "EULA": "TRUE",
+    "VERSION": "LATEST",
+    "SERVER_NAME": "DockCraft Server",
+    "GAMEMODE": "survival",
+    "DIFFICULTY": "normal",
+    "MAX_PLAYERS": "10",
+    "ONLINE_MODE": "true",
+    "ALLOW_LIST": "false",
+    "LEVEL_NAME": "Bedrock level",
+    "LEVEL_SEED": "",
+    "LEVEL_TYPE": "DEFAULT",
+    "SERVER_PORT": "19132",
+    "VIEW_DISTANCE": "32",
+    "TICK_DISTANCE": "4",
+    "PLAYER_IDLE_TIMEOUT": "30"
+  }
+}

@@ -13,6 +13,7 @@ const path = require('path');
 const multer = require('multer');
 const packManager = require('../services/packManager');
 const { ok, fail } = require('../middleware/auth');
+const { safeFetch } = require('../security');
 
 const router = express.Router();
 const upload = multer({ dest: os.tmpdir(), limits: { fileSize: 512 * 1024 * 1024 } });
@@ -35,7 +36,8 @@ router.post('/upload', upload.single('pack'), (req, res) => {
     return ok(res, { installed }, 201);
   } catch (err) {
     if (req.file) fs.rmSync(req.file.path, { force: true });
-    return fail(res, err.message, 400);
+    const data = err.kind === 'manifest_missing' ? { kind: 'manifest_missing' } : undefined;
+    return fail(res, err.message, 400, data);
   }
 });
 
@@ -43,19 +45,25 @@ router.post('/upload', upload.single('pack'), (req, res) => {
 router.post('/install-url', async (req, res) => {
   const { url } = req.body || {};
   if (!url) return fail(res, 'A download URL is required.', 400);
+  if (typeof url !== 'string') return fail(res, 'A download URL is required.', 400);
 
   let tmpFile;
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(60000) });
+    // safeFetch validates the URL and re-validates on every redirect hop,
+    // blocking any target that resolves to a private/loopback/link-local
+    // address. https-only by default.
+    const response = await safeFetch(url, { signal: AbortSignal.timeout(60000) });
     if (!response.ok) return fail(res, `Download failed (status ${response.status}).`, 502);
     const buffer = Buffer.from(await response.arrayBuffer());
-    tmpFile = path.join(os.tmpdir(), `dockcraft-dl-${Date.now()}.zip`);
+    if (buffer.length === 0) return fail(res, 'Downloaded file is empty.', 422);
+    tmpFile = path.join(os.tmpdir(), `dockcraft-dl-${Date.now()}-${process.pid}.zip`);
     fs.writeFileSync(tmpFile, buffer);
     const installed = packManager.installFromFile(tmpFile, { activate: true });
     return ok(res, { installed }, 201);
   } catch (err) {
     const code = err.name === 'TimeoutError' ? 504 : 502;
-    return fail(res, `Could not install from URL: ${err.message}`, code);
+    const data = err.kind === 'manifest_missing' ? { kind: 'manifest_missing' } : undefined;
+    return fail(res, `Could not install from URL: ${err.message}`, code, data);
   } finally {
     if (tmpFile) fs.rmSync(tmpFile, { force: true });
   }

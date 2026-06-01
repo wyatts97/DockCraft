@@ -7,9 +7,17 @@
  *  - toast(): bottom-right notifications for success/error/info.
  *  - token helpers + guard() that gates pages behind setup + auth.
  *
+ * String/format helpers (escapeHtml, formatSize, formatUptime) live in
+ * ./utils.js to avoid duplication. They're re-exported here for back-compat
+ * with existing call sites.
+ *
  * Every async UI action should show feedback (spinner + toast) per the
  * beginner-friendliness rules in AGENTS.md.
  */
+
+import { escapeHtml } from './utils';
+
+export { escapeHtml };
 
 const TOKEN_KEY = 'dockcraft-token';
 const USER_KEY = 'dockcraft-user';
@@ -86,6 +94,9 @@ function ensureToastHost() {
   if (toastHost) return toastHost;
   toastHost = document.createElement('div');
   toastHost.className = 'dc-toast-host';
+  toastHost.setAttribute('role', 'status');
+  toastHost.setAttribute('aria-live', 'polite');
+  toastHost.setAttribute('aria-atomic', 'false');
   document.body.appendChild(toastHost);
   return toastHost;
 }
@@ -94,6 +105,7 @@ export function toast(message, type = 'info', timeout = 4000) {
   const host = ensureToastHost();
   const el = document.createElement('div');
   el.className = `dc-toast dc-toast--${type}`;
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status');
   el.textContent = message;
   host.appendChild(el);
   requestAnimationFrame(() => el.classList.add('is-in'));
@@ -103,6 +115,10 @@ export function toast(message, type = 'info', timeout = 4000) {
   };
   if (timeout) setTimeout(remove, timeout);
   el.addEventListener('click', remove);
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') remove();
+  });
+  el.tabIndex = 0;
 }
 
 /* ---------------- Auth guard ---------------- */
@@ -143,28 +159,10 @@ export function withButtonSpinner(btn, label = 'Working…') {
   const original = btn.innerHTML;
   btn.disabled = true;
   btn.dataset.loading = 'true';
-  btn.innerHTML = `<span class="dc-spinner"></span><span>${label}</span>`;
+  btn.innerHTML = `<span class="dc-spinner" aria-hidden="true"></span><span>${escapeHtml(label)}</span>`;
   return () => {
     btn.disabled = false;
     delete btn.dataset.loading;
     btn.innerHTML = original;
   };
-}
-
-export function escapeHtml(str) {
-  return String(str ?? '').replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
-}
-
-export function formatUptime(seconds) {
-  if (!seconds || seconds < 0) return '—';
-  const d = Math.floor(seconds / 86400);
-  const h = Math.floor((seconds % 86400) / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const parts = [];
-  if (d) parts.push(`${d}d`);
-  if (h) parts.push(`${h}h`);
-  parts.push(`${m}m`);
-  return parts.join(' ');
 }

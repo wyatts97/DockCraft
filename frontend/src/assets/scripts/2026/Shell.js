@@ -145,6 +145,9 @@ function renderTopbar(crumbsAttr) {
         ${renderCrumbs(crumbsAttr)}
       </div>
       <div class="topbar-actions">
+        <!-- Help button is mounted here by help.js on topbar-actions; the
+             placeholder lets the layout reserve space before the JS runs. -->
+        <div data-topbar-actions></div>
         <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"></button>
 
         <div class="dd-wrap">
@@ -169,12 +172,12 @@ function renderTopbar(crumbsAttr) {
     </header>`;
 }
 
-function renderFooter() {
+function renderFooter(version) {
   return `
     <footer class="d-footer">
       <div>DockCraft · Minecraft Bedrock server manager</div>
       <div class="d-footer-meta">
-        <span>v1.0.0</span>
+        <span data-app-version>${version ? `v${version}` : '…'}</span>
       </div>
     </footer>`;
 }
@@ -191,4 +194,12 @@ export function mountShell() {
   if (sidebarHost) sidebarHost.outerHTML = renderSidebar(activeKey);
   if (topbarHost)  topbarHost.outerHTML  = renderTopbar(crumbs);
   if (footerHost)  footerHost.outerHTML  = renderFooter();
+
+  // Async: fetch the running version once and patch the footer label.
+  fetch('/api/system/version').then((r) => r.ok ? r.json() : null).then((d) => {
+    if (d && d.success && d.data && d.data.version) {
+      const el = document.querySelector('[data-app-version]');
+      if (el) el.textContent = `v${d.data.version}`;
+    }
+  }).catch(() => { /* leave placeholder */ });
 }

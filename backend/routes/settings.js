@@ -55,11 +55,19 @@ router.put('/', async (req, res) => {
 
   const allowed = knownKeys();
   const patch = {};
+  const rejected = [];
   for (const [key, value] of Object.entries(incoming)) {
     if (allowed.has(key)) patch[key] = String(value);
+    else rejected.push(key);
   }
   if (Object.keys(patch).length === 0) {
-    return fail(res, 'No recognized settings were provided.', 400);
+    return fail(
+      res,
+      rejected.length
+        ? `Unrecognized setting${rejected.length > 1 ? 's' : ''}: ${rejected.join(', ')}.`
+        : 'No recognized settings were provided.',
+      400,
+    );
   }
 
   const cfg = config.setEnv(patch);
@@ -69,12 +77,21 @@ router.put('/', async (req, res) => {
   try {
     await docker.inspect();
     await docker.recreate(cfg.env);
-    return ok(res, { env: cfg.env, applied: true });
+    return ok(res, {
+      env: cfg.env,
+      applied: true,
+      ...(rejected.length ? { ignored: rejected } : {}),
+    });
   } catch (err) {
     if (err.code === 404) {
-      return ok(res, { env: cfg.env, applied: false, note: 'Saved. Will apply when the server is created.' });
+      return ok(res, {
+        env: cfg.env,
+        applied: false,
+        note: 'Saved. Will apply when the server is created.',
+        ...(rejected.length ? { ignored: rejected } : {}),
+      });
     }
-    return fail(res, `Saved settings, but failed to restart the server: ${err.message}`, 503);
+    return fail(res, 'Saved settings, but failed to restart the server.', 503);
   }
 });
 

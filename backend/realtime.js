@@ -10,6 +10,9 @@
  *
  * The log stream is (re)attached whenever it drops, so it survives container
  * restarts. Stats are polled every 5s via Dockerode.
+ *
+ * A ring buffer of the last STATS_HISTORY_SIZE readings is kept in memory and
+ * exposed via getStatsHistory() so the dashboard can render a sparkline.
  */
 
 const docker = require('./docker');
@@ -17,6 +20,7 @@ const logParser = require('./services/logParser');
 
 const STATS_INTERVAL_MS = 5000;
 const LOG_REATTACH_MS = 5000;
+const STATS_HISTORY_SIZE = 60;
 
 function attach(io) {
   // Re-broadcast structured parser events to all clients.
@@ -74,21 +78,35 @@ function startStatsLoop(io) {
   setInterval(async () => {
     try {
       const s = await docker.status();
-      io.emit('server:stats', {
+      const payload = {
         cpu: s.cpu,
         memory: s.memory,
         uptimeSeconds: s.uptimeSeconds,
         running: s.running,
         state: s.state,
         playerCount: logParser.getOnlinePlayers().length,
-      });
+      };
+      io.emit('server:stats', payload);
+      recordStats(payload);
       if (!s.running) logParser.reset();
     } catch {
-      io.emit('server:stats', {
-        cpu: 0, memory: 0, uptimeSeconds: 0, running: false, state: 'absent', playerCount: 0,
-      });
+      const payload = { cpu: 0, memory: 0, uptimeSeconds: 0, running: false, state: 'absent', playerCount: 0 };
+      io.emit('server:stats', payload);
+      recordStats(payload);
     }
   }, STATS_INTERVAL_MS);
 }
 
-module.exports = { attach };
+/* ---- Stats history (ring buffer) ---- */
+const statsHistory = [];
+
+function recordStats(snapshot) {
+  statsHistory.push({ ...snapshot, t: Date.now() });
+  if (statsHistory.length > STATS_HISTORY_SIZE) statsHistory.shift();
+}
+
+function getStatsHistory() {
+  return statsHistory.slice();
+}
+
+module.exports = { attach, getStatsHistory, _recordStats: recordStats };

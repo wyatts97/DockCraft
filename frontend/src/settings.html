@@ -36,6 +36,26 @@
             <div id="settingsTabNav" class="dc-tab-nav"></div>
             <div id="settingsTabBody"></div>
           </section>
+
+          <section class="card" id="settingsProfile" style="margin-top:22px">
+            <div class="card-head">
+              <div class="card-title-wrap">
+                <span class="eyebrow">Account</span>
+                <h2 class="card-title">Your profile</h2>
+              </div>
+            </div>
+            <div class="dc-field-grid" style="margin-bottom:18px">
+              <div class="dc-field">
+                <div class="dc-field-label">Signed in as</div>
+                <div class="cell-name" id="profileName" style="font-size:14px">—</div>
+              </div>
+              <div class="dc-field">
+                <div class="dc-field-label">Password</div>
+                <div class="cell-date" style="font-size:14px">Last changed: <span id="profilePwHint">unknown</span></div>
+                <button class="btn btn--ghost btn--sm" type="button" id="changePasswordBtn" style="align-self:flex-start; margin-top:6px">Change password</button>
+              </div>
+            </div>
+          </section>
         </main>
         <div data-shell-footer></div>
       </div>

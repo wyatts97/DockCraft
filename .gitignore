@@ -4,11 +4,26 @@ node_modules/
 # Build output
 frontend/dist/
 
-# Runtime config (created on first run; contains the admin hash + secrets)
+# Runtime config (created on first run; contains the admin hash + JWT secret)
+# The checked-in dockcraft.config.example.json is the template — keep the real
+# file out of source control. It will be auto-generated from defaults on first
+# start, or honored as-is if you drop one in.
 backend/dockcraft.config.json
+backend/dockcraft.config.local.json
+backend/dockcraft.config.*.json
+!backend/dockcraft.config.example.json
 
 # Minecraft server data (worlds, packs, server binary, backups)
 data/
+
+# Test artifacts (the per-process sandbox, coverage reports, vitest cache).
+# Note: the test SOURCE under backend/tests/ and frontend/tests/ stays in
+# the repo — these patterns only ignore the generated outputs.
+backend/tmp/
+backend/tmp-*.log
+**/coverage/
+**/.vitest/
+**/vitest-report*/
 
 # Environment
 .env

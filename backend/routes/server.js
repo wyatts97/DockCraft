@@ -5,6 +5,7 @@
 const express = require('express');
 const docker = require('../docker');
 const logParser = require('../services/logParser');
+const realtime = require('../realtime');
 const { ok, fail } = require('../middleware/auth');
 
 const router = express.Router();
@@ -42,6 +43,11 @@ router.get('/status', async (req, res) => {
     }
     return handleDockerError(res, err);
   }
+});
+
+/** GET /api/server/stats/history — last N readings of cpu/mem/players for sparklines. */
+router.get('/stats/history', (req, res) => {
+  return ok(res, { points: realtime.getStatsHistory() });
 });
 
 /** POST /api/server/start */

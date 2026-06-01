@@ -18,47 +18,52 @@
   </head>
   <body data-page="setup">
     <div style="min-height:100vh; display:grid; place-items:center; padding:24px; background:var(--bg-body)">
-      <div class="card dc-wizard" id="setupWizard" style="width:min(620px,96vw)">
+      <div class="card dc-wizard" id="setupWizard" style="width:min(640px,96vw)">
         <div class="card-head">
           <div class="card-title-wrap">
             <span class="eyebrow">First-run setup</span>
             <h2 class="card-title">Welcome to DockCraft</h2>
           </div>
         </div>
+        <p class="dc-wizard-intro">Three quick steps to launch your Bedrock server. Your answers save automatically — feel free to leave and come back.</p>
 
-        <div class="dc-wizard-dots">
-          <div class="dc-wizard-dot is-active" data-dot></div>
-          <div class="dc-wizard-dot" data-dot></div>
-          <div class="dc-wizard-dot" data-dot></div>
+        <div class="dc-wizard-dots" role="tablist" aria-label="Setup progress">
+          <button class="dc-wizard-dot is-active" type="button" data-dot role="tab" aria-current="step" aria-selected="true" aria-label="Step 1 of 3"></button>
+          <button class="dc-wizard-dot" type="button" data-dot role="tab" aria-current="false" aria-selected="false" aria-label="Step 2 of 3"></button>
+          <button class="dc-wizard-dot" type="button" data-dot role="tab" aria-current="false" aria-selected="false" aria-label="Step 3 of 3"></button>
         </div>
 
         <!-- Step 1: server basics -->
-        <div class="dc-wizard-step is-active" data-step>
+        <div class="dc-wizard-step is-active" data-step role="tabpanel" aria-labelledby="setup-step-1">
           <div class="dc-field-grid">
             <div class="dc-field">
-              <div class="dc-field-label">Server name</div>
+              <label class="dc-field-label" for="serverName">Server name</label>
               <input id="serverName" class="input" type="text" value="DockCraft Server">
+              <div class="dc-field-hint">Shown to players in the Bedrock server list.</div>
             </div>
             <div class="dc-field">
-              <div class="dc-field-label">Game mode</div>
+              <label class="dc-field-label" for="gamemode">Game mode</label>
               <select id="gamemode" class="input">
                 <option value="survival">survival</option>
                 <option value="creative">creative</option>
                 <option value="adventure">adventure</option>
               </select>
+              <div class="dc-field-hint">You can change this any time from Server Settings.</div>
             </div>
             <div class="dc-field">
-              <div class="dc-field-label">Difficulty</div>
+              <label class="dc-field-label" for="difficulty">Difficulty</label>
               <select id="difficulty" class="input">
                 <option value="peaceful">peaceful</option>
                 <option value="easy">easy</option>
                 <option value="normal" selected>normal</option>
                 <option value="hard">hard</option>
               </select>
+              <div class="dc-field-hint">Affects hostile mob damage and hunger.</div>
             </div>
             <div class="dc-field">
-              <div class="dc-field-label">Max players</div>
+              <label class="dc-field-label" for="maxPlayers">Max players</label>
               <input id="maxPlayers" class="input" type="number" value="10" min="1">
+              <div class="dc-field-hint">Simultaneous connections. 5–10 is a sensible default for a small server.</div>
             </div>
           </div>
           <div class="dc-wizard-actions">
@@ -68,30 +73,35 @@
         </div>
 
         <!-- Step 2: network + admin account -->
-        <div class="dc-wizard-step" data-step>
+        <div class="dc-wizard-step" data-step role="tabpanel" aria-labelledby="setup-step-2" hidden>
           <div class="dc-field-grid">
             <div class="dc-field">
-              <div class="dc-field-label">Server port</div>
+              <label class="dc-field-label" for="port">Server port</label>
               <input id="port" class="input" type="number" value="19132">
+              <div class="dc-field-hint" id="portHint">Default 19132 is what Bedrock clients look for. Change only if you have a port conflict.</div>
             </div>
             <div class="dc-field">
-              <div class="dc-field-label">Require Xbox login</div>
-              <label class="dc-switch"><input id="onlineMode" type="checkbox" checked><span class="dc-switch-track"></span></label>
+              <label class="dc-field-label" for="onlineMode">Require Xbox login</label>
+              <label class="dc-switch"><input id="onlineMode" type="checkbox" checked role="switch" aria-checked="true"><span class="dc-switch-track" aria-hidden="true"></span></label>
+              <div class="dc-field-hint">Recommended. Prevents unverified gamertags from joining.</div>
             </div>
             <div class="dc-field">
-              <div class="dc-field-label">Use allowlist</div>
-              <label class="dc-switch"><input id="allowList" type="checkbox"><span class="dc-switch-track"></span></label>
+              <label class="dc-field-label" for="allowList">Use allowlist</label>
+              <label class="dc-switch"><input id="allowList" type="checkbox" role="switch" aria-checked="false"><span class="dc-switch-track" aria-hidden="true"></span></label>
+              <div class="dc-field-hint">If on, only players you add on the Players page can join. Leave off for an open server.</div>
             </div>
           </div>
           <div class="dc-danger-note" style="margin-top:18px">Create your admin account — you'll use this to sign in.</div>
           <div class="dc-field-grid">
             <div class="dc-field">
-              <div class="dc-field-label">Admin username</div>
+              <label class="dc-field-label" for="adminUser">Admin username</label>
               <input id="adminUser" class="input" type="text" autocomplete="username">
+              <div class="dc-field-hint">Used to sign in to the dashboard. Not a Minecraft gamertag.</div>
             </div>
             <div class="dc-field">
-              <div class="dc-field-label">Admin password</div>
+              <label class="dc-field-label" for="adminPass">Admin password</label>
               <input id="adminPass" class="input" type="password" autocomplete="new-password">
+              <div class="dc-field-hint">At least 6 characters. You can change it later from Settings → Account.</div>
             </div>
           </div>
           <div class="dc-wizard-actions">
@@ -102,6 +112,7 @@
 
         <!-- Step 3: review -->
         <div class="dc-wizard-step" data-step>
+          <p class="dc-wizard-intro">Look over your choices. If anything looks wrong, go back and fix it.</p>
           <div id="reviewList"></div>
           <div class="dc-wizard-actions">
             <button class="btn btn--ghost" data-prev>Back</button>

@@ -1,0 +1,13 @@
+{
+  "name": "dockcraft",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DockCraft is a self-hosted web dashboard for running a Minecraft Bedrock Dedicated Server inside Docker. The root package.json is a thin orchestrator: `npm test` runs both the backend and frontend test suites in sequence. See backend/AGENTS.md and frontend/AGENTS.md (or AGENTS.md in the repo root) for full conventions.",
+  "scripts": {
+    "test": "node scripts/test.mjs",
+    "test:backend": "npm test --prefix backend",
+    "test:frontend": "npm test --prefix frontend"
+  }
+}
+
+

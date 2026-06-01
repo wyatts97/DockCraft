@@ -46,23 +46,52 @@
 
           <div class="dc-stat-grid">
             <div class="dc-stat">
-              <div class="dc-stat-label">Status</div>
+              <div class="dc-stat-label-wrap">
+                <div class="dc-stat-label">Status</div>
+                <button class="dc-tip" type="button" aria-expanded="false" aria-controls="tip-stat-status" data-tip="Whether the Minecraft container is running, stopped, or doesn't exist yet.">?</button>
+                <span class="dc-tip-bubble" role="tooltip" id="tip-stat-status">Whether the Minecraft container is running, stopped, or doesn't exist yet.</span>
+              </div>
               <div class="dc-stat-value"><span id="statStatus" class="dc-status dc-status--absent">—</span></div>
             </div>
             <div class="dc-stat">
-              <div class="dc-stat-label">Players online</div>
-              <div class="dc-stat-value" id="statPlayers">0</div>
+              <div class="dc-stat-label-wrap">
+                <div class="dc-stat-label">Players online</div>
+                <button class="dc-tip" type="button" aria-expanded="false" aria-controls="tip-stat-players" data-tip="Number of players currently connected. The sparkline shows the last 5 minutes of activity.">?</button>
+                <span class="dc-tip-bubble" role="tooltip" id="tip-stat-players">Number of players currently connected. The sparkline shows the last 5 minutes of activity.</span>
+              </div>
+              <div class="dc-stat-value dc-stat-value--with-chart">
+                <span id="statPlayers">0</span>
+                <svg class="dc-spark" data-spark="players" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
+              </div>
             </div>
             <div class="dc-stat">
-              <div class="dc-stat-label">CPU usage</div>
-              <div class="dc-stat-value" id="statCpu">0%</div>
+              <div class="dc-stat-label-wrap">
+                <div class="dc-stat-label">CPU usage</div>
+                <button class="dc-tip" type="button" aria-expanded="false" aria-controls="tip-stat-cpu" data-tip="How much of one CPU core the Minecraft server is using. Sustained high values (>80%) mean the server is overloaded.">?</button>
+                <span class="dc-tip-bubble" role="tooltip" id="tip-stat-cpu">How much of one CPU core the Minecraft server is using. Sustained high values (&gt;80%) mean the server is overloaded.</span>
+              </div>
+              <div class="dc-stat-value dc-stat-value--with-chart">
+                <span id="statCpu">0%</span>
+                <svg class="dc-spark" data-spark="cpu" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
+              </div>
             </div>
             <div class="dc-stat">
-              <div class="dc-stat-label">Memory</div>
-              <div class="dc-stat-value" id="statMem">0%</div>
+              <div class="dc-stat-label-wrap">
+                <div class="dc-stat-label">Memory</div>
+                <button class="dc-tip" type="button" aria-expanded="false" aria-controls="tip-stat-mem" data-tip="Percentage of the host's memory allocated to the Minecraft container. The default itzg image caps at 4 GB.">?</button>
+                <span class="dc-tip-bubble" role="tooltip" id="tip-stat-mem">Percentage of the host's memory allocated to the Minecraft container. The default itzg image caps at 4 GB.</span>
+              </div>
+              <div class="dc-stat-value dc-stat-value--with-chart">
+                <span id="statMem">0%</span>
+                <svg class="dc-spark" data-spark="memory" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
+              </div>
             </div>
             <div class="dc-stat">
-              <div class="dc-stat-label">Uptime</div>
+              <div class="dc-stat-label-wrap">
+                <div class="dc-stat-label">Uptime</div>
+                <button class="dc-tip" type="button" aria-expanded="false" aria-controls="tip-stat-uptime" data-tip="How long the server has been running since the last start. Restarts the counter to zero.">?</button>
+                <span class="dc-tip-bubble" role="tooltip" id="tip-stat-uptime">How long the server has been running since the last start. Restarts the counter to zero.</span>
+              </div>
               <div class="dc-stat-value" id="statUptime">—</div>
             </div>
           </div>
@@ -73,8 +102,9 @@
                 <span class="eyebrow">Live</span>
                 <h2 class="card-title">Recent events</h2>
               </div>
+              <button class="btn btn--ghost btn--sm" id="eventFeedClear" type="button" aria-label="Clear event feed">Clear</button>
             </div>
-            <div id="eventFeed">
+            <div id="eventFeed" class="dc-feed" role="log" aria-live="polite" aria-relevant="additions" aria-label="Recent server events">
               <div class="dc-empty-cell" data-empty>Waiting for server activity…</div>
             </div>
           </section>

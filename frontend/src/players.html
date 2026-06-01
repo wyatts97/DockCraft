@@ -32,9 +32,9 @@
               </div>
               <div class="table-scroll">
                 <table class="table">
-                  <thead><tr><th>Player</th><th>Joined</th></tr></thead>
+                  <thead><tr><th>Player</th><th>Role</th><th>Joined</th></tr></thead>
                   <tbody id="onlineBody">
-                    <tr><td colspan="2" class="dc-empty-cell">Loading…</td></tr>
+                    <tr><td colspan="3" class="dc-empty-cell">Loading…</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -56,6 +56,56 @@
                   <thead><tr><th>Player</th><th></th></tr></thead>
                   <tbody id="allowlistBody">
                     <tr><td colspan="2" class="dc-empty-cell">Loading…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="card col-6">
+              <div class="card-head">
+                <div class="card-title-wrap">
+                  <span class="eyebrow">Blocked</span>
+                  <h2 class="card-title">Ban list</h2>
+                </div>
+              </div>
+              <form id="addBanForm" class="dc-console-form" style="margin-bottom:18px">
+                <input name="gamertag" class="input" type="text" placeholder="Ban by Xbox gamertag" autocomplete="off">
+                <button class="btn btn--danger" type="submit">Ban</button>
+              </form>
+              <div class="table-scroll">
+                <table class="table">
+                  <thead><tr><th>Player</th><th>Reason</th><th></th></tr></thead>
+                  <tbody id="bansBody">
+                    <tr><td colspan="3" class="dc-empty-cell">Loading…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="card col-12">
+              <div class="card-head">
+                <div class="card-title-wrap">
+                  <span class="eyebrow">Privileges</span>
+                  <h2 class="card-title">Permissions</h2>
+                </div>
+              </div>
+              <p class="cell-date" style="margin-bottom:14px">
+                Override the default role for a specific player. Operators get admin commands; visitors are read-only. Players not listed here use the server default.
+              </p>
+              <form id="addPermissionForm" class="dc-console-form" style="margin-bottom:18px; flex-wrap:wrap">
+                <input name="gamertag" class="input" type="text" placeholder="Add by Xbox gamertag" autocomplete="off" style="flex:1 1 220px">
+                <select name="role" class="input" style="flex:0 0 auto; min-width:140px" aria-label="Default role">
+                  <option value="operator">Operator</option>
+                  <option value="member" selected>Member</option>
+                  <option value="visitor">Visitor</option>
+                </select>
+                <button class="btn btn--primary" type="submit">Add</button>
+              </form>
+              <div class="table-scroll">
+                <table class="table">
+                  <thead><tr><th>XUID</th><th>Role</th><th></th></tr></thead>
+                  <tbody id="permissionsBody">
+                    <tr><td colspan="3" class="dc-empty-cell">Loading…</td></tr>
                   </tbody>
                 </table>
               </div>

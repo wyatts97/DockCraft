@@ -16,26 +16,87 @@
       })();
     </script>
   </head>
-  <body data-page="login">
-    <div style="min-height:100vh; display:grid; place-items:center; padding:24px; background:var(--bg-body)">
-      <div class="auth-card" style="width:min(420px,94vw)">
-        <h2>Welcome to DockCraft</h2>
-        <p class="sub">Sign in to manage your Minecraft server.</p>
-        <form id="loginForm" class="auth-form">
-          <div class="field">
-            <label class="field-label" for="username">Username</label>
-            <input id="username" name="username" class="input" type="text" autocomplete="username" required>
+  <body data-page="login" class="dc-login-body">
+    <main class="dc-login">
+      <section class="dc-login-brand" aria-label="About DockCraft">
+        <div class="dc-login-brand-inner">
+          <div class="dc-login-logo">
+            <svg viewBox="0 0 36 36" aria-hidden="true">
+              <path fill="currentColor" d="M14.747 9.125c.527-1.426 1.736-2.573 3.317-2.573c1.643 0 2.792 1.085 3.318 2.573l6.077 16.867c.186.496.248.931.248 1.147c0 1.209-.992 2.046-2.139 2.046c-1.303 0-1.954-.682-2.264-1.611l-.931-2.915h-8.62l-.93 2.884c-.31.961-.961 1.642-2.232 1.642c-1.24 0-2.294-.93-2.294-2.17c0-.496.155-.868.217-1.023l6.233-16.867zm.34 11.256h5.891l-2.883-8.992h-.062l-2.946 8.992z"/>
+            </svg>
+            <span>DockCraft</span>
           </div>
-          <div class="field">
-            <label class="field-label" for="password">Password</label>
-            <input id="password" name="password" class="input" type="password" autocomplete="current-password" required>
-          </div>
-          <button class="btn btn--primary auth-submit" type="submit">
-            Sign in
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          </button>
-        </form>
-      </div>
-    </div>
+          <h1 class="dc-login-headline">Run your <span class="dc-login-accent">Bedrock server</span> without touching a terminal.</h1>
+          <p class="dc-login-tagline">Start, stop, and configure your Minecraft server. Install mods with a single click. Back up worlds on a schedule. All from a polished dashboard that lives next to your server.</p>
+          <ul class="dc-login-features" role="list">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> One-click mod installs from the marketplace</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Automated, versioned world backups</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Live console and player stream</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Plain-English settings with safe defaults</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="dc-login-panel" aria-label="Sign in">
+        <div class="dc-login-card">
+          <header class="dc-login-head">
+            <span class="eyebrow">Sign in</span>
+            <h2 class="dc-login-title">Welcome back</h2>
+            <p class="dc-login-sub">Enter your DockCraft credentials to continue.</p>
+          </header>
+
+          <div id="loginError" class="dc-login-error" role="alert" aria-live="assertive" hidden></div>
+
+          <form id="loginForm" class="dc-login-form" novalidate>
+            <div class="dc-field">
+              <label class="dc-field-label" for="username">Username</label>
+              <input id="username" name="username" class="input" type="text" autocomplete="username" required aria-describedby="usernameHint" autocapitalize="none" autocorrect="off" spellcheck="false">
+              <span class="dc-field-hint" id="usernameHint">The admin account you created during setup.</span>
+            </div>
+
+            <div class="dc-field">
+              <label class="dc-field-label" for="password">Password</label>
+              <div class="dc-login-pw">
+                <input id="password" name="password" class="input" type="password" autocomplete="current-password" required aria-describedby="passwordHint">
+                <button class="dc-login-pw-toggle" type="button" id="pwToggle" aria-label="Show password" aria-pressed="false">
+                  <svg class="dc-eye-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+                  <svg class="dc-eye-hide" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12A3 3 0 1 1 9.88 9.88" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <span class="dc-field-hint" id="passwordHint">Caps Lock matters.</span>
+            </div>
+
+            <label class="dc-login-remember">
+              <input type="checkbox" id="rememberMe">
+              <span class="dc-login-remember-box" aria-hidden="true"></span>
+              <span>Remember me on this device</span>
+            </label>
+
+            <button class="btn btn--primary dc-login-submit" type="submit">
+              <span class="dc-login-submit-label">Sign in</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <div class="dc-login-foot">
+              <a href="#" id="forgotLink">Forgot password?</a>
+              <span class="dc-login-status" id="loginStatus" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <aside class="dc-login-forgot" id="forgotPanel" hidden>
+            <h3>Password recovery</h3>
+            <p>DockCraft runs in your own Docker container — there is no central account service to reset through. To recover access, ask the person who set up the server to:</p>
+            <ol>
+              <li>Open a shell on the Docker host.</li>
+              <li>Run <code>docker exec -it dockcraft node -e "console.log(require('bcryptjs').hashSync('new-password', 10))"</code>.</li>
+              <li>Paste the resulting hash into <code>dockcraft.config.json</code> under <code>admin.passwordHash</code> and restart the container.</li>
+            </ol>
+            <button type="button" class="btn btn--ghost btn--sm" id="forgotClose">Got it</button>
+          </aside>
+        </div>
+
+        <p class="dc-login-legal">DockCraft · Self-hosted Bedrock server manager</p>
+      </section>
+    </main>
   </body>
 </html>

@@ -21,7 +21,9 @@ function initThemeToggle() {
   if (!toggle) return;
 
   const update = () => {
-    toggle.innerHTML = root.getAttribute('data-theme') === 'dark' ? SUN_ICON : MOON_ICON;
+    const dark = root.getAttribute('data-theme') === 'dark';
+    toggle.innerHTML = dark ? SUN_ICON : MOON_ICON;
+    toggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
   };
   update();
 

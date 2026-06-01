@@ -28,9 +28,26 @@
                 <span class="eyebrow">Live output</span>
                 <h2 class="card-title">Server console</h2>
               </div>
-              <button class="btn btn--ghost btn--sm" id="consoleClear">Clear</button>
+              <div class="card-head-actions">
+                <label class="dc-toggle">
+                  <input type="checkbox" id="consoleAutoscroll" checked>
+                  <span>Autoscroll</span>
+                </label>
+                <button class="btn btn--ghost btn--sm" id="consoleCopy" type="button" title="Copy visible log to clipboard">Copy</button>
+                <button class="btn btn--ghost btn--sm" id="consoleDownload" type="button" title="Download full log">Download</button>
+                <button class="btn btn--ghost btn--sm" id="consoleClear" type="button">Clear</button>
+              </div>
             </div>
-            <div id="consoleOutput" class="dc-console"></div>
+            <div class="dc-console-filters" role="toolbar" aria-label="Filter console output">
+              <button class="dc-chip is-active" data-filter="all" type="button" aria-pressed="true">All <span class="dc-chip-count" data-filter-count="all">0</span></button>
+              <button class="dc-chip" data-filter="info" type="button" aria-pressed="false">Info <span class="dc-chip-count" data-filter-count="info">0</span></button>
+              <button class="dc-chip" data-filter="warn" type="button" aria-pressed="false">Warn <span class="dc-chip-count" data-filter-count="warn">0</span></button>
+              <button class="dc-chip" data-filter="error" type="button" aria-pressed="false">Error <span class="dc-chip-count" data-filter-count="error">0</span></button>
+              <button class="dc-chip" data-filter="join" type="button" aria-pressed="false">Join <span class="dc-chip-count" data-filter-count="join">0</span></button>
+              <button class="dc-chip" data-filter="leave" type="button" aria-pressed="false">Leave <span class="dc-chip-count" data-filter-count="leave">0</span></button>
+              <button class="dc-chip" data-filter="cmd" type="button" aria-pressed="false">Sent <span class="dc-chip-count" data-filter-count="cmd">0</span></button>
+            </div>
+            <div id="consoleOutput" class="dc-console" role="log" aria-live="polite" aria-relevant="additions" aria-label="Server console output"></div>
             <form id="consoleForm" class="dc-console-form">
               <input id="consoleInput" class="input" type="text" placeholder="Type a command, e.g. say Hello or time set day" autocomplete="off">
               <button class="btn btn--primary" type="submit">Send</button>

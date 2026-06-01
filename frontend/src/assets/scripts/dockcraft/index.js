@@ -10,6 +10,9 @@ import { guard, clearToken, getUser } from './api';
 import { confirmModal } from './modal';
 import { mountShell } from '../2026/Shell.js';
 import { initShellBehaviors } from '../2026/init.js';
+import { initWhatsNew } from './whatsNew';
+import { initHelpDrawer } from './help';
+import { initOnboarding } from './onboarding';
 
 import * as dashboard from './pages/dashboard';
 import * as consolePage from './pages/console';
@@ -45,6 +48,14 @@ export async function initDockCraft() {
   if (!allowed) return; // a redirect is in progress
 
   wireChrome();
+
+  // Mount the version popover (in footer) and the help drawer (slide-in from
+  // the topbar) on every authenticated page. They are independent of the
+  // page-specific module and don't need a teardown — they live in the
+  // fixed-position layer outside the main content area.
+  try { await initWhatsNew(); } catch (err) { console.error('[dockcraft] whatsNew failed:', err); }
+  try { initHelpDrawer(); } catch (err) { console.error('[dockcraft] help drawer failed:', err); }
+  try { await initOnboarding(); } catch (err) { console.error('[dockcraft] onboarding failed:', err); }
 
   try {
     await PAGES[page].init();
@@ -109,6 +120,15 @@ export async function navigateTo(url, { push = true } = {}) {
     mountShell();
     initShellBehaviors();
     await initDockCraft();
+
+    // After SPA navigation, move focus to the page <h1> so screen-reader users
+    // hear the new page title. (Default behavior: focus stays on the link and
+    // they get no signal the page changed.)
+    const h1 = document.querySelector('main.content h1, main.content .hero-title, main.content .card-title');
+    if (h1) {
+      h1.setAttribute('tabindex', '-1');
+      h1.focus({ preventScroll: true });
+    }
   } catch (err) {
     console.error('[router] SPA navigation failed, falling back to full reload:', err);
     location.href = url;

@@ -7,11 +7,13 @@
  * status poll as a safety net.
  */
 
-import { apiFetch, toast, formatUptime, escapeHtml, withButtonSpinner } from '../api';
+import { apiFetch, toast, withButtonSpinner } from '../api';
+import { escapeHtml, formatUptime } from '../utils';
 import { confirmModal } from '../modal';
 import { getSocket } from '../socket';
 
 let statusInterval = null;
+let clearBtn = null;
 
 function onServerStats(s) { applyStats(s); }
 function onConsoleLine(line) { maybePushEvent(line); }
@@ -21,7 +23,10 @@ function onServerReady(p) { pushEvent(`Server ready${p.version ? ` (v${p.version
 
 export async function init() {
   bindActions();
+  bindClear();
+  bindGlossaryTips();
   await refreshStatus();
+  await loadSparklineHistory();
   statusInterval = setInterval(refreshStatus, 10000);
 
   const socket = getSocket();
@@ -34,6 +39,7 @@ export async function init() {
 
 export function destroy() {
   if (statusInterval) { clearInterval(statusInterval); statusInterval = null; }
+  if (clearBtn) { clearBtn.removeEventListener('click', clearEvents); clearBtn = null; }
   const socket = getSocket();
   socket.off('server:stats', onServerStats);
   socket.off('console:line', onConsoleLine);
@@ -54,19 +60,36 @@ function applyStats(s) {
   setText('statPlayers', String(s.playerCount ?? 0));
   renderStatusBadge(s.running, s.state);
   toggleActionButtons(s.running);
+  pushSpark(s);
+}
+
+function clearStatValues() {
+  setText('statCpu', '—');
+  setText('statMem', '—');
+  setText('statUptime', '—');
+  setText('statPlayers', '0');
 }
 
 function renderStatusBadge(running, state) {
   const badge = document.getElementById('statStatus');
   if (!badge) return;
   let label = 'Stopped';
+  let icon = 'pause';
   let cls = 'dc-status dc-status--stopped';
-  if (state === 'absent') { label = 'Not created'; cls = 'dc-status dc-status--absent'; }
-  else if (state === 'unreachable') { label = 'Docker offline'; cls = 'dc-status dc-status--absent'; }
-  else if (running) { label = 'Running'; cls = 'dc-status dc-status--running'; }
+  if (state === 'absent') { label = 'Not created'; icon = 'minus'; cls = 'dc-status dc-status--absent'; }
+  else if (state === 'unreachable') { label = 'Docker offline'; icon = 'off'; cls = 'dc-status dc-status--absent'; }
+  else if (running) { label = 'Running'; icon = 'play'; cls = 'dc-status dc-status--running'; }
   badge.className = cls;
-  badge.textContent = label;
+  badge.dataset.state = state || (running ? 'running' : 'stopped');
+  badge.innerHTML = `<span class="dc-status-icon" aria-hidden="true">${STATUS_ICONS[icon]}</span><span>${escapeHtml(label)}</span>`;
 }
+
+const STATUS_ICONS = {
+  play:  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+  minus: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="11" width="14" height="2" rx="1"/></svg>',
+  off:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5 5l14 14"/></svg>',
+};
 
 function toggleActionButtons(running) {
   const start = document.querySelector('[data-action="start"]');
@@ -83,7 +106,62 @@ async function refreshStatus() {
     applyStats(s);
   } catch {
     renderStatusBadge(false, 'absent');
+    clearStatValues();
   }
+}
+
+/* ---- Sparklines ---- */
+const SPARK_MAX_POINTS = 60;
+const sparkBuffers = { cpu: [], memory: [], players: [] };
+
+function pushSpark(s) {
+  sparkBuffers.cpu.push(s.cpu ?? 0);
+  sparkBuffers.memory.push(s.memory ?? 0);
+  sparkBuffers.players.push(s.playerCount ?? 0);
+  for (const k of Object.keys(sparkBuffers)) {
+    if (sparkBuffers[k].length > SPARK_MAX_POINTS) sparkBuffers[k].shift();
+  }
+  renderSparks();
+}
+
+function renderSparks() {
+  for (const key of ['cpu', 'memory', 'players']) {
+    const svg = document.querySelector(`[data-spark="${key}"]`);
+    if (!svg) continue;
+    svg.innerHTML = sparkPath(sparkBuffers[key], key === 'players' ? null : 100);
+  }
+}
+
+function sparkPath(values, maxValue) {
+  if (!values.length) return '';
+  const W = 100, H = 28, PAD = 1;
+  const max = maxValue != null ? maxValue : Math.max(1, ...values);
+  const stepX = (W - PAD * 2) / Math.max(1, values.length - 1);
+  const pts = values.map((v, i) => {
+    const x = PAD + i * stepX;
+    const y = H - PAD - (Math.max(0, Math.min(max, v)) / max) * (H - PAD * 2);
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  });
+  // Single polyline so it stays crisp at any size.
+  return `<polyline fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="${pts.join(' ')}"/>`;
+}
+
+async function loadSparklineHistory() {
+  try {
+    const data = await apiFetch('/server/stats/history');
+    const pts = data.points || [];
+    // Seed the buffers with the server's last readings so the chart isn't empty
+    // for the first 5 minutes after page load.
+    for (const p of pts) {
+      sparkBuffers.cpu.push(p.cpu ?? 0);
+      sparkBuffers.memory.push(p.memory ?? 0);
+      sparkBuffers.players.push(p.playerCount ?? 0);
+    }
+    for (const k of Object.keys(sparkBuffers)) {
+      while (sparkBuffers[k].length > SPARK_MAX_POINTS) sparkBuffers[k].shift();
+    }
+    renderSparks();
+  } catch { /* sparklines are progressive enhancement */ }
 }
 
 function bindActions() {
@@ -112,6 +190,30 @@ function bindActions() {
   });
 }
 
+function bindClear() {
+  clearBtn = document.getElementById('eventFeedClear');
+  if (clearBtn) clearBtn.addEventListener('click', clearEvents);
+}
+
+function bindGlossaryTips() {
+  // Each stat card has a tiny "?" button that opens a plain-English description
+  // of the metric. The data-tip attribute carries the message so the same
+  // pattern works in settings.js without re-implementation.
+  document.querySelectorAll('.dc-stat .dc-tip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    });
+    btn.addEventListener('blur', () => btn.setAttribute('aria-expanded', 'false'));
+  });
+}
+
+function clearEvents() {
+  const feed = document.getElementById('eventFeed');
+  if (!feed) return;
+  feed.innerHTML = '<div class="dc-empty-cell" data-empty>Waiting for server activity…</div>';
+}
+
 const MAX_EVENTS = 30;
 function maybePushEvent(line) {
   if (!line || !line.text) return;
@@ -128,7 +230,7 @@ function pushEvent(text, level = 'info') {
   const item = document.createElement('div');
   item.className = `dc-event dc-event--${level}`;
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  item.innerHTML = `<span class="dc-event-dot"></span><span class="dc-event-text">${escapeHtml(text)}</span><span class="dc-event-time">${time}</span>`;
+  item.innerHTML = `<span class="dc-event-dot" aria-hidden="true"></span><span class="dc-event-text">${escapeHtml(text)}</span><span class="dc-event-time">${escapeHtml(time)}</span>`;
   feed.prepend(item);
   while (feed.children.length > MAX_EVENTS) feed.lastChild.remove();
 }
